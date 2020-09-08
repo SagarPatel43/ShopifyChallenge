@@ -10,7 +10,7 @@ import InputBase from '@material-ui/core/InputBase';
 import Button from "@material-ui/core/Button";
 import CloudUploadIcon from '@material-ui/icons/CloudUpload';
 import Link from "@material-ui/core/Link";
-import AuthenticationService from "../service/AuthenticationService";
+import AuthenticationService from "../../service/AuthenticationService";
 import { useHistory } from "react-router-dom";
 
 const useStyles = makeStyles((theme) => ({

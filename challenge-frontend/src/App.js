@@ -2,7 +2,7 @@ import React, {Component} from 'react';
 import axios from 'axios';
 import './App.css';
 import {withStyles} from "@material-ui/core/styles";
-import TitleBar from "./component/TitleBar";
+import TitleBar from "./component/image/TitleBar";
 import CircularProgress from "@material-ui/core/CircularProgress";
 import DeleteDialog from "./component/image/DeleteDialog";
 import ImageList from "./component/image/ImageList";
