@@ -3,13 +3,13 @@ import ReactDOM from 'react-dom';
 import './index.css';
 import App from './App';
 import * as serviceWorker from './serviceWorker';
-import LoginPage from "./LoginPage";
+import LoginPage from "./component/login/LoginPage";
 import {
     BrowserRouter as Router,
     Route,
     Switch
 } from "react-router-dom";
-import PrivateRoute from "./PrivateRoute";
+import PrivateRoute from "./component/login/PrivateRoute";
 
 const NotFound = () => <h1 style={{color: 'white'}}>404 - Not found</h1>
 

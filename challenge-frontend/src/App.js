@@ -4,9 +4,9 @@ import './App.css';
 import {withStyles} from "@material-ui/core/styles";
 import TitleBar from "./component/TitleBar";
 import CircularProgress from "@material-ui/core/CircularProgress";
-import DeleteDialog from "./component/DeleteDialog";
-import ImageList from "./component/ImageList";
-import AuthenticationService from "./AuthenticationService";
+import DeleteDialog from "./component/image/DeleteDialog";
+import ImageList from "./component/image/ImageList";
+import AuthenticationService from "./service/AuthenticationService";
 
 const styles = {
     root: {
@@ -79,7 +79,7 @@ class App extends Component {
             }).catch((e) => {
             this.setState({deleteOpen: false})
             if (e.response && e.response.status >= 400) {
-                alert("You must be an admin to delete images other than your own")
+                alert("You must be an admin to delete image other than your own")
             } else {
                 alert("Something went wrong")
             }

@@ -3,8 +3,8 @@ import {withStyles} from "@material-ui/core/styles";
 import TextField from "@material-ui/core/TextField";
 import Button from "@material-ui/core/Button";
 import {Typography} from "@material-ui/core";
-import TitleBar from "./component/TitleBar";
-import AuthenticationService from "./AuthenticationService";
+import TitleBar from "../TitleBar";
+import AuthenticationService from "../../service/AuthenticationService";
 
 const styles = {
     root: {
