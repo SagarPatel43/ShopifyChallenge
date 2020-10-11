@@ -1,6 +1,7 @@
 package com.shopify.challenge.service;
 
 import com.shopify.challenge.dto.ImageDTO;
+import com.shopify.challenge.dto.ImageSliceDTO;
 import com.shopify.challenge.model.Image;
 import com.shopify.challenge.model.User;
 import com.shopify.challenge.repository.ImageRepository;
@@ -8,9 +9,11 @@ import com.shopify.challenge.repository.UserRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
@@ -42,14 +45,19 @@ public class ImageService {
         this.userRepository = userRepository;
     }
 
-    public List<ImageDTO> getAllImages() {
-        List<Image> images = imageRepository.findAll();
+    public ImageSliceDTO getAllImages(Integer pageNum, Integer pageSize) {
+        Pageable page = PageRequest.of(pageNum, pageSize);
+        Slice<Image> images = imageRepository.findAll(page);
 
-        return images.stream().map(image -> new ImageDTO(image.getId(), image.getName(), image.getPath(), image.getUser().getUsername())).collect(Collectors.toList());
+        List<ImageDTO> imageDTOs = images.getContent().stream()
+                .map(image -> new ImageDTO(image.getId(), image.getName(), image.getPath(), image.getUser().getUsername()))
+                .collect(Collectors.toList());
+
+        return new ImageSliceDTO(images.hasNext(), imageDTOs);
     }
 
     @PreAuthorize("#username == principal.username")
-    public ImageDTO storeImage(MultipartFile file, String username) throws Exception {
+    public void storeImage(MultipartFile file, String username) throws Exception {
         String fileName = StringUtils.cleanPath(Objects.requireNonNull(file.getOriginalFilename()));
 
         // Deny empty files, file names that attempt path traversal, and non-image files
@@ -63,9 +71,7 @@ public class ImageService {
         log.info("File " + fileName + " successfully saved to " + uploadPath);
 
         User user = userRepository.findByUsername(username).orElseThrow(Exception::new);
-        Image image = imageRepository.save(new Image(fileName, serverPath, user));
-
-        return new ImageDTO(image.getId(), image.getName(), image.getPath(), user.getUsername());
+        imageRepository.save(new Image(fileName, serverPath, user));
     }
 
     public void deleteImage(Long id) {

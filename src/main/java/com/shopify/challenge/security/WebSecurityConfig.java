@@ -31,13 +31,12 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter implements W
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         http
-                .cors()
-                .and()
                 .csrf()
                 .disable()
                 .authorizeRequests()
                 .antMatchers("/admin/**").hasAuthority(UserRoles.ADMIN)
                 .antMatchers("/user/**").hasAnyAuthority(UserRoles.ADMIN, UserRoles.USER)
+                .antMatchers("/h2-console/**").permitAll()
                 .anyRequest()
                 .authenticated()
                 .and()
@@ -45,17 +44,10 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter implements W
                 .logoutSuccessHandler((httpServletRequest, httpServletResponse, authentication) -> {
                     httpServletResponse.setStatus(HttpServletResponse.SC_OK);
                 })
+                .and().headers().frameOptions().disable()
                 .and().formLogin().disable()
                 .httpBasic()
                 .authenticationEntryPoint(basicAuthEntryPoint);
-
-        // h2 console debug
-//        http.authorizeRequests()
-//                .antMatchers("/").permitAll()
-//                .antMatchers("/h2-console/**").permitAll();
-//
-//        http.csrf().disable();
-//        http.headers().frameOptions().disable();
     }
 
     @Override
@@ -68,13 +60,5 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter implements W
                 .usersByUsernameQuery("SELECT username, password, true from User where username=?")
                 .authoritiesByUsernameQuery("SELECT username, role from User where username=?");
 
-    }
-
-    @Override
-    public void addCorsMappings(CorsRegistry registry) {
-        registry.addMapping("/**")
-                .allowedMethods("GET", "POST", "OPTIONS")
-                .allowedHeaders("Authorization")
-                .allowCredentials(true);
     }
 }

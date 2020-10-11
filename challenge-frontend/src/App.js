@@ -1,20 +1,12 @@
 import React, {Component} from 'react';
 import axios from 'axios';
 import './App.css';
-import {withStyles} from "@material-ui/core/styles";
 import TitleBar from "./component/image/TitleBar";
 import CircularProgress from "@material-ui/core/CircularProgress";
 import DeleteDialog from "./component/image/DeleteDialog";
 import ImageList from "./component/image/ImageList";
 import AuthenticationService from "./service/AuthenticationService";
-
-const styles = {
-    root: {
-        display: 'flex',
-        flexWrap: 'wrap',
-        overflow: 'hidden'
-    }
-};
+import InfiniteScroll from 'react-infinite-scroll-component';
 
 class App extends Component {
 
@@ -25,11 +17,14 @@ class App extends Component {
             filter: '',
             isLoading: true,
             deleteOpen: false,
-            deleteImage: null
+            deleteImage: null,
+            hasNext: false,
+            pageNum: 0
         }
 
         this.onClickDelete = this.onClickDelete.bind(this);
         this.onSearch = this.onSearch.bind(this);
+        this.updateImages = this.updateImages.bind(this);
     }
 
     componentDidMount() {
@@ -37,10 +32,14 @@ class App extends Component {
     }
 
     updateImages() {
-        axios.get('/user/images')
+        axios.get('/user/images?pageNum=' + this.state.pageNum + '&pageSize=25')
             .then(response => {
-                this.setState({images: response.data, isLoading: false})
+                let data = response.data;
+                let array = this.state.images.concat(data.images);
+                this.setState({images: array, isLoading: false, hasNext: data.hasNext})
             });
+
+        this.setState({pageNum: this.state.pageNum + 1});
     }
 
     onUpload = event => {
@@ -52,9 +51,8 @@ class App extends Component {
 
         axios.post('/user/' + AuthenticationService.getLoggedInUser() + '/upload', formData)
             .then(response => {
-                let array = this.state.images.concat(response.data);
-
-                this.setState({images: array})
+                this.setState({images: [], pageNum: 0})
+                this.updateImages();
             }).catch(e => {
             console.log(e);
         });
@@ -69,13 +67,10 @@ class App extends Component {
         let isAdmin = AuthenticationService.isAdmin()
         let api = isAdmin ? '/admin' : '/user';
 
-        axios.post(api + '/delete/' + deleteImage.id)
+        axios.post(api + '/delete/' + deleteImage)
             .then(response => {
-                // copy array
-                let array = [...this.state.images];
-                array.splice(deleteImage.index, 1);
-
-                this.setState({images: array, deleteOpen: false});
+                this.setState({deleteOpen: false, images: [], pageNum: 0})
+                this.updateImages();
             }).catch((e) => {
             this.setState({deleteOpen: false})
             if (e.response && e.response.status >= 400) {
@@ -86,10 +81,10 @@ class App extends Component {
         })
     }
 
-    onClickDelete(index, id) {
+    onClickDelete(id) {
         this.setState({
             deleteOpen: true,
-            deleteImage: {index, id}
+            deleteImage: id
         })
     }
 
@@ -98,8 +93,7 @@ class App extends Component {
     }
 
     render() {
-        const {images, isLoading, filter} = this.state;
-        const {classes} = this.props;
+        const {images, isLoading, filter, hasNext} = this.state;
 
         if (isLoading) {
             return <CircularProgress/>
@@ -108,14 +102,25 @@ class App extends Component {
         const filtered = images.filter(i => i.name.includes(filter))
 
         return (
-            <div className={classes.root}>
+            <InfiniteScroll
+                dataLength={images.length}
+                next={this.updateImages}
+                hasMore={hasNext}
+                loader={<CircularProgress/>}
+                endMessage={
+                    <p style={{textAlign: 'center', color: 'white'}}>
+                        <b>End of images</b>
+                    </p>
+                }
+                style={{overflow: 'hidden', height: 'auto'}}
+            >
                 <DeleteDialog open={this.state.deleteOpen} onClose={this.onDeleteClose} onDelete={this.onDelete}/>
                 <TitleBar onUpload={this.onUpload} onSearch={this.onSearch}/>
                 <ImageList images={filtered} onClickDelete={this.onClickDelete}/>
-            </div>
+            </InfiniteScroll>
         )
     }
 
 }
 
-export default withStyles(styles)(App);
+export default App;

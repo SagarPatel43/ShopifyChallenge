@@ -9,7 +9,7 @@ import AuthenticationService from "../../service/AuthenticationService";
 
 const styles = {
     imageRoot: {
-        marginTop: 20,
+        marginTop: 30,
         marginLeft: 80
     },
     tileRoot: {
@@ -53,7 +53,7 @@ class ImageList extends Component {
         if (AuthenticationService.isAdmin() || uploader === AuthenticationService.getLoggedInUser()) {
             return (
                 <IconButton style={{color: 'white'}}
-                            onClick={() => this.props.onClickDelete(index, imageId)}>
+                            onClick={() => this.props.onClickDelete(imageId)}>
                     <DeleteIcon/>
                 </IconButton>
             )
