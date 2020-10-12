@@ -8,7 +8,17 @@ Image Repo web application for Shopify Challenge
   * Admins can delete all images
 * Users with authorization and authentication
   * API is secured to prevent unauthorized access
-* Filter images by name
+* Search images by name
+* Impression logging for actions such as
+  * Image viewed by user
+  * Image uploaded by user
+  * Image deleted by user
+  * Keyword searched by user
+* Statistics page to view metrics such as
+  * Top uploaders
+  * Most viewed images
+  * Most popular search keywords
+  * Total counts on number of images, uploads, deletes, and views
 
 ## Requirements
 * Maven
@@ -49,7 +59,8 @@ In `application.properties` the following properties need to be configured:
 3. Click `Upload Images` and select any image files you want to upload
 
 From here you could:
-* Try to search bar to filter your images
+* Enter a search query and hit enter for results
 * Click on an image to expand
 * Delete an image using the delete icon
 * Login as another user
+* Login as an ADMIN and navigate to "/statistics" to view statistics page
