@@ -1,4 +1,5 @@
 import React, {Component} from 'react';
+import axios from 'axios';
 import {withStyles} from "@material-ui/core/styles";
 import {fade, GridList} from "@material-ui/core";
 import GridListTile from "@material-ui/core/GridListTile";
@@ -60,6 +61,12 @@ class ImageList extends Component {
         }
     }
 
+    viewImpression(imageId) {
+        axios.get('/user/view/' + imageId)
+            .then(response => console.log(response))
+            .catch(e => console.log(e));
+    }
+
     render() {
         const {classes} = this.props;
 
@@ -70,7 +77,7 @@ class ImageList extends Component {
                         <GridListTile classes={{root: classes.tileRoot, tile: classes.border}} key={image.id}
                                       cols={1} style={{padding: 0}}>
                             <img className={classes.image} src={image.url} alt={"Could not load"}/>
-                            <a href={image.url}>
+                            <a href={image.url} onClick={() => this.viewImpression(image.id)}>
                                 <div className={classes.overlay}/>
                             </a>
 

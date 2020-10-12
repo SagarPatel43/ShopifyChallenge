@@ -11,7 +11,7 @@ import Button from "@material-ui/core/Button";
 import CloudUploadIcon from '@material-ui/icons/CloudUpload';
 import Link from "@material-ui/core/Link";
 import AuthenticationService from "../../service/AuthenticationService";
-import { useHistory } from "react-router-dom";
+import {useHistory} from "react-router-dom";
 
 const useStyles = makeStyles((theme) => ({
     root: {
@@ -139,19 +139,21 @@ export default function TitleBar(props) {
                                 <u>Image Repository</u>
                             </Link>
                         </Typography>
-                        {!props.login &&
+                        {!props.cleanTitle &&
                         <div className={classes.searchBar}>
                             <div className={classes.searchIcon}>
                                 <SearchIcon/>
                             </div>
+                            <form onSubmit={props.onSubmit}>
                             <InputBase
                                 placeholder="Search for images"
                                 className={classes.inputInput}
-                                onChange={(e) => props.onSearch(e)}
+                                onChange={props.onSearch}
                                 style={{color: 'white'}}
                             />
+                            </form>
                         </div>}
-                        {!props.login &&
+                        {!props.cleanTitle &&
                         <div className={classes.uploadRoot}>
                             <Typography align='left' display='block'  variant='subtitle2' gutterBottom={true} style={{marginTop: 5}}>Welcome {AuthenticationService.getLoggedInUser()}</Typography>
                             <input

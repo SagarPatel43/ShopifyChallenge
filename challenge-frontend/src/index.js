@@ -4,12 +4,9 @@ import './index.css';
 import App from './App';
 import * as serviceWorker from './serviceWorker';
 import LoginPage from "./component/login/LoginPage";
-import {
-    BrowserRouter as Router,
-    Route,
-    Switch
-} from "react-router-dom";
+import {BrowserRouter as Router, Route, Switch} from "react-router-dom";
 import PrivateRoute from "./component/login/PrivateRoute";
+import StatisticsPage from "./component/statistics/StatisticsPage";
 
 const NotFound = () => <h1 style={{color: 'white'}}>404 - Not found</h1>
 
@@ -18,6 +15,7 @@ const routing = (
         <Switch>
             <Route exact path="/login" component={LoginPage}/>
             <PrivateRoute exact path="/" component={App}/>
+            <PrivateRoute exact path="/statistics" component={StatisticsPage}/>
             <Route component={NotFound}/>
         </Switch>
     </Router>

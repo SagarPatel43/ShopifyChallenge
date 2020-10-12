@@ -21,18 +21,19 @@ public class ImageController {
     }
 
     @GetMapping("/user/images")
-    public ResponseEntity<?> getImages(@RequestParam(defaultValue = "0") Integer pageNum,
+    public ResponseEntity<?> getImages(@RequestParam(required = false) String query,
+                                       @RequestParam(defaultValue = "0") Integer pageNum,
                                        @RequestParam(defaultValue = "25") Integer pageSize) {
-        ImageSliceDTO imageSliceDTO = imageService.getAllImages(pageNum, pageSize);
+        ImageSliceDTO imageSliceDTO = imageService.getAllImages(query, pageNum, pageSize);
 
         return new ResponseEntity<>(imageSliceDTO, HttpStatus.OK);
     }
 
-    @PostMapping("/user/{username}/upload")
-    public ResponseEntity<?> uploadImage(@RequestParam("images") MultipartFile[] files, @PathVariable(value = "username") String username) {
+    @PostMapping("/user/upload")
+    public ResponseEntity<?> uploadImage(@RequestParam("images") MultipartFile[] files) {
         try {
             for (MultipartFile file : files) {
-                imageService.storeImage(file, username);
+                imageService.storeImage(file);
             }
         } catch (Exception e) {
             log.error(e.toString());
@@ -53,7 +54,11 @@ public class ImageController {
 
     @PostMapping("/admin/delete/{imageId}")
     public ResponseEntity<?> deleteImageAdmin(@PathVariable(value = "imageId") Long imageId) {
-        imageService.deleteImage(imageId);
+        try {
+            imageService.deleteImage(imageId);
+        } catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
         return new ResponseEntity<>(HttpStatus.OK);
     }
 }

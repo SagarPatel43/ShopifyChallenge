@@ -4,16 +4,17 @@ import com.shopify.challenge.dto.ImageDTO;
 import com.shopify.challenge.dto.ImageSliceDTO;
 import com.shopify.challenge.model.Image;
 import com.shopify.challenge.model.User;
+import com.shopify.challenge.model.statistics.ImageActions;
 import com.shopify.challenge.repository.ImageRepository;
 import com.shopify.challenge.repository.UserRepository;
+import com.shopify.challenge.service.statistics.ImpressionService;
+import com.shopify.challenge.util.UserUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
@@ -38,16 +39,30 @@ public class ImageService {
 
     private final ImageRepository imageRepository;
     private final UserRepository userRepository;
+    private final ImpressionService impressionService;
 
     @Autowired
-    public ImageService(ImageRepository imageRepository, UserRepository userRepository) {
+    public ImageService(ImageRepository imageRepository, UserRepository userRepository, ImpressionService impressionService) {
         this.imageRepository = imageRepository;
         this.userRepository = userRepository;
+        this.impressionService = impressionService;
     }
 
-    public ImageSliceDTO getAllImages(Integer pageNum, Integer pageSize) {
+    public ImageSliceDTO getAllImages(String query, Integer pageNum, Integer pageSize) {
         Pageable page = PageRequest.of(pageNum, pageSize);
-        Slice<Image> images = imageRepository.findAll(page);
+        Slice<Image> images;
+        // Is this a search
+        if (query == null) {
+            images = imageRepository.findAll(page);
+        } else {
+            images = imageRepository.findByNameContainingIgnoreCase(query, page);
+
+            try {
+                impressionService.registerSearch(query);
+            } catch (Exception e) {
+                log.error(e.toString());
+            }
+        }
 
         List<ImageDTO> imageDTOs = images.getContent().stream()
                 .map(image -> new ImageDTO(image.getId(), image.getName(), image.getPath(), image.getUser().getUsername()))
@@ -56,8 +71,7 @@ public class ImageService {
         return new ImageSliceDTO(images.hasNext(), imageDTOs);
     }
 
-    @PreAuthorize("#username == principal.username")
-    public void storeImage(MultipartFile file, String username) throws Exception {
+    public void storeImage(MultipartFile file) throws Exception {
         String fileName = StringUtils.cleanPath(Objects.requireNonNull(file.getOriginalFilename()));
 
         // Deny empty files, file names that attempt path traversal, and non-image files
@@ -70,21 +84,30 @@ public class ImageService {
         file.transferTo(uploadPath);
         log.info("File " + fileName + " successfully saved to " + uploadPath);
 
-        User user = userRepository.findByUsername(username).orElseThrow(Exception::new);
-        imageRepository.save(new Image(fileName, serverPath, user));
+        User user = userRepository.findByUsername(UserUtil.getUsername()).orElseThrow(Exception::new);
+        Image image = imageRepository.save(new Image(fileName, serverPath, user));
+
+        impressionService.registerImpression(ImageActions.UPLOAD, user.getId(), image.getId());
     }
 
-    public void deleteImage(Long id) {
-        imageRepository.deleteById(id);
+    public void deleteImage(Long id) throws Exception {
+        Image image = imageRepository.findById(id).orElseThrow(Exception::new);
+
+        imageRepository.delete(image);
+
+        impressionService.registerImpression(ImageActions.DELETE, image.getId());
     }
 
     public void safeDeleteImage(Long imageId) throws Exception {
-        String loggedInUser = SecurityContextHolder.getContext().getAuthentication().getName();
         Image image = imageRepository.findById(imageId).orElseThrow(Exception::new);
-        if (!image.getUser().getUsername().equals(loggedInUser)) {
+        User user = userRepository.findByUsername(UserUtil.getUsername()).orElseThrow(Exception::new);
+
+        if (!image.getUser().getId().equals(user.getId())) {
             throw new Exception();
         }
 
-        imageRepository.deleteById(image.getId());
+        imageRepository.delete(image);
+
+        impressionService.registerImpression(ImageActions.DELETE, user.getId(), image.getId());
     }
 }

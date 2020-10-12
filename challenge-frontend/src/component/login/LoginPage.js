@@ -86,7 +86,7 @@ class LoginPage extends Component {
 
         return (
             <form onSubmit={this.handleSubmit}>
-                <TitleBar login={true}/>
+                <TitleBar cleanTitle={true}/>
                 <div className={classes.root}>
                     <Typography variant='h1' className={classes.header}>Login Page</Typography>
                     <TextField

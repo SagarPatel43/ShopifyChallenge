@@ -24,7 +24,7 @@ public class PopulateDB implements CommandLineRunner {
     }
 
     @Override
-    public void run(String... args) throws Exception {
+    public void run(String... args) {
         PasswordEncoder encoder = PasswordEncoderFactories.createDelegatingPasswordEncoder();
 
         User userAdmin = new User("Wolverine", encoder.encode( "password"), UserRoles.ADMIN);

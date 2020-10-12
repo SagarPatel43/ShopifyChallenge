@@ -14,7 +14,7 @@ class App extends Component {
         super(props);
         this.state = {
             images: [],
-            filter: '',
+            query: '',
             isLoading: true,
             deleteOpen: false,
             deleteImage: null,
@@ -24,6 +24,7 @@ class App extends Component {
 
         this.onClickDelete = this.onClickDelete.bind(this);
         this.onSearch = this.onSearch.bind(this);
+        this.onSubmitSearch = this.onSubmitSearch.bind(this);
         this.updateImages = this.updateImages.bind(this);
     }
 
@@ -32,7 +33,12 @@ class App extends Component {
     }
 
     updateImages() {
-        axios.get('/user/images?pageNum=' + this.state.pageNum + '&pageSize=25')
+        let query = this.state.query;
+        if (query) {
+            query = '&query=' + query;
+        }
+
+        axios.get('/user/images?pageNum=' + this.state.pageNum + query)
             .then(response => {
                 let data = response.data;
                 let array = this.state.images.concat(data.images);
@@ -49,7 +55,7 @@ class App extends Component {
             formData.append('images', event.target.files[i]);
         }
 
-        axios.post('/user/' + AuthenticationService.getLoggedInUser() + '/upload', formData)
+        axios.post('/user/upload', formData)
             .then(response => {
                 this.setState({images: [], pageNum: 0})
                 this.updateImages();
@@ -73,7 +79,7 @@ class App extends Component {
                 this.updateImages();
             }).catch((e) => {
             this.setState({deleteOpen: false})
-            if (e.response && e.response.status >= 400) {
+            if (e.response && e.response.status >= 400 && e.response.status < 500) {
                 alert("You must be an admin to delete image other than your own")
             } else {
                 alert("Something went wrong")
@@ -89,18 +95,21 @@ class App extends Component {
     }
 
     onSearch(e) {
-        this.setState({filter: e.target.value})
+        this.setState({query: e.target.value})
+    }
+
+    async onSubmitSearch(e) {
+        e.preventDefault();
+        await this.setState({images: [], pageNum: 0})
+        this.updateImages();
     }
 
     render() {
-        const {images, isLoading, filter, hasNext} = this.state;
+        const {images, isLoading, hasNext} = this.state;
 
         if (isLoading) {
             return <CircularProgress/>
         }
-
-        const filtered = images.filter(i => i.name.includes(filter))
-
         return (
             <InfiniteScroll
                 dataLength={images.length}
@@ -115,8 +124,8 @@ class App extends Component {
                 style={{overflow: 'hidden', height: 'auto'}}
             >
                 <DeleteDialog open={this.state.deleteOpen} onClose={this.onDeleteClose} onDelete={this.onDelete}/>
-                <TitleBar onUpload={this.onUpload} onSearch={this.onSearch}/>
-                <ImageList images={filtered} onClickDelete={this.onClickDelete}/>
+                <TitleBar onUpload={this.onUpload} onSearch={this.onSearch} onSubmit={this.onSubmitSearch}/>
+                <ImageList images={images} onClickDelete={this.onClickDelete}/>
             </InfiniteScroll>
         )
     }

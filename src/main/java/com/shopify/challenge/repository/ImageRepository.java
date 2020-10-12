@@ -7,4 +7,6 @@ import org.springframework.data.repository.CrudRepository;
 
 public interface ImageRepository extends CrudRepository<Image, Long> {
     Slice<Image> findAll(Pageable pageable);
+
+    Slice<Image> findByNameContainingIgnoreCase(String query, Pageable pageable);
 }
